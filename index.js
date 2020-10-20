@@ -1,14 +1,14 @@
 const express = require('express')
 const childProcess = require('child_process')
+const loudness = require('loudness')
 
 const app = express()
 const port = 3000
-const radioUrl = 'http://live-icy.gss.dr.dk/A/A29H.mp3'
 let radioProcess
 
 const startRadioProcess = () => {
   if (radioProcess) radioProcess.kill()
-  radioProcess = childProcess.fork('./radioPlayer', [radioUrl])
+  radioProcess = childProcess.fork('./radioPlayer', [process.argv[2]])
 }
 
 const stopRadioProcess = () => {
@@ -46,6 +46,18 @@ app.get('/state', (req, res) => {
   } else {
     res.send('stopped')
   }
+})
+
+app.post('/volume/up', async (req, res) => {
+  const vol = await loudness.getVolume()
+  await loudness.setVolume(vol + 1)
+  res.send(`volume set to ${await loudness.getVolume()}`)
+})
+
+app.post('/volume/down', async (req, res) => {
+  const vol = await loudness.getVolume()
+  await loudness.setVolume(vol - 1)
+  res.send(`volume set to ${await loudness.getVolume()}`)
 })
 
 app.listen(port, () => {

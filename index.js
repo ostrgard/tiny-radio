@@ -9,11 +9,13 @@ let radioProcess
 const startRadioProcess = () => {
   if (radioProcess) radioProcess.kill()
   radioProcess = childProcess.fork('./radioPlayer', [process.argv[2]])
+  console.log('started')
 }
 
 const stopRadioProcess = () => {
   radioProcess.kill()
   radioProcess = undefined
+  console.log('stopped')
 }
 
 app.post('/start', (req, res) => {
@@ -51,13 +53,17 @@ app.get('/state', (req, res) => {
 app.post('/volume/up', async (req, res) => {
   const vol = await loudness.getVolume()
   await loudness.setVolume(vol + 1)
-  res.send(`volume set to ${await loudness.getVolume()}`)
+  const msg = `volume set to ${await loudness.getVolume()}`
+  console.log(msg)
+  res.send(msg)
 })
 
 app.post('/volume/down', async (req, res) => {
   const vol = await loudness.getVolume()
   await loudness.setVolume(vol - 1)
-  res.send(`volume set to ${await loudness.getVolume()}`)
+  const msg = `volume set to ${await loudness.getVolume()}`
+  console.log(msg)
+  res.send(msg)
 })
 
 app.listen(port, () => {

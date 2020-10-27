@@ -69,3 +69,7 @@ app.post('/volume/down', async (req, res) => {
 app.listen(port, () => {
   console.log(`Tiny Radio can be controlled through http://localhost:${port}`)
 })
+
+if (process.argv.includes('--playOnStart')) {
+  startRadioProcess()
+}

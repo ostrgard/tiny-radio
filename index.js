@@ -10,6 +10,13 @@ const startRadioProcess = () => {
   if (radioProcess) radioProcess.kill()
   radioProcess = childProcess.fork('./radioPlayer', [process.argv[2]])
   console.log('started')
+
+  radioProcess.on('exit', (code) => {
+    if (code === 1) {
+      console.log('radio process died, retrying in 10 seconds')
+      setTimeout(startRadioProcess, 10000)
+    }
+  })
 }
 
 const stopRadioProcess = () => {

@@ -71,5 +71,8 @@ app.listen(port, () => {
 })
 
 if (process.argv.includes('--playOnStart')) {
+  startRadioProcess()
+  setTimeout(startRadioProcess, 10000)
   setTimeout(startRadioProcess, 30000)
+  setTimeout(startRadioProcess, 60000)
 }

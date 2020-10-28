@@ -7,9 +7,14 @@ const port = 3000
 let radioProcess
 
 const startRadioProcess = () => {
-  if (radioProcess) radioProcess.kill()
-  radioProcess = childProcess.fork('./radioPlayer', [process.argv[2]])
-  console.log('started')
+  try {
+    if (radioProcess) radioProcess.kill()
+    radioProcess = childProcess.fork('./radioPlayer', [process.argv[2]])
+    console.log('started')
+  } catch (e) {
+    console.error('failed to start, trying again in 10 seconds', e)
+    setTimeout(startRadioProcess, 10000)
+  }
 }
 
 const stopRadioProcess = () => {
@@ -71,7 +76,5 @@ app.listen(port, () => {
 })
 
 if (process.argv.includes('--playOnStart')) {
-  setTimeout(() => {
-    startRadioProcess()
-  }, 10000)
+  startRadioProcess()
 }

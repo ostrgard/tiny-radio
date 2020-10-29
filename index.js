@@ -1,6 +1,7 @@
 const express = require('express')
 const childProcess = require('child_process')
-const loudness = require('loudness')
+const args = require('./args')
+const volume = require('./volume')
 
 const app = express()
 const port = 3000
@@ -8,15 +9,8 @@ let radioProcess
 
 const startRadioProcess = () => {
   if (radioProcess) radioProcess.kill()
-  radioProcess = childProcess.fork('./radioPlayer', [process.argv[2]])
+  radioProcess = childProcess.fork('./radioPlayer', [args.url])
   console.log('started')
-
-  radioProcess.on('exit', (code) => {
-    if (code === 1) {
-      console.log('radio process died, retrying in 10 seconds')
-      setTimeout(startRadioProcess, 10000)
-    }
-  })
 }
 
 const stopRadioProcess = () => {
@@ -57,26 +51,20 @@ app.get('/state', (req, res) => {
   }
 })
 
-app.post('/volume/up', async (req, res) => {
-  const vol = await loudness.getVolume()
-  await loudness.setVolume(vol + 1)
-  const msg = `volume set to ${await loudness.getVolume()}`
+app.post('/volume/up', (req, res) => {
+  volume.increase()
+  const msg = `increased volume`
   console.log(msg)
   res.send(msg)
 })
 
-app.post('/volume/down', async (req, res) => {
-  const vol = await loudness.getVolume()
-  await loudness.setVolume(vol - 1)
-  const msg = `volume set to ${await loudness.getVolume()}`
+app.post('/volume/down', (req, res) => {
+  volume.decrease()
+  const msg = `decreased volume`
   console.log(msg)
   res.send(msg)
 })
 
 app.listen(port, () => {
   console.log(`Tiny Radio can be controlled through http://localhost:${port}`)
-
-  if (process.argv.includes('--playOnStart')) {
-    startRadioProcess()
-  }
 })

@@ -20,6 +20,6 @@ const setVolume = (volume = currentVolume) => {
 setInterval(setVolume, 1000 * 5)
 
 module.exports = {
-  increase: () => setVolume(currentVolume + 2),
-  decrease: () => setVolume(currentVolume - 2),
+  increase: () => setVolume(currentVolume + 5),
+  decrease: () => setVolume(currentVolume - 5),
 }

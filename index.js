@@ -4,33 +4,43 @@ const args = require('./args')
 const volume = require('./volume')
 
 const app = express()
-const port = 3000
 let radioProcess
+let currentlyPlaying = null
+
+const getStatus = () => ({
+  currentlyPlaying,
+  volume: volume.getVolume(),
+  playing: Boolean(radioProcess),
+})
 
 const startRadioProcess = () => {
-  if (radioProcess) radioProcess.kill()
-  radioProcess = childProcess.fork('./radioPlayer', [args.url])
-  console.log('started')
+  return new Promise((resolve) => {
+    if (radioProcess) radioProcess.kill()
+    radioProcess = childProcess.fork('./radioPlayer', [args.url])
+    radioProcess.on('message', (data) => {
+      currentlyPlaying = data
+      resolve()
+    })
+  })
 }
 
 const stopRadioProcess = () => {
   radioProcess.kill()
   radioProcess = undefined
-  console.log('stopped')
+  currentlyPlaying = null
 }
 
 app.post('/start', (req, res) => {
-  startRadioProcess()
-  res.send('started')
+  startRadioProcess().then(() => {
+    res.send(getStatus())
+  })
 })
 
 app.post('/stop', (req, res) => {
   if (radioProcess) {
     stopRadioProcess()
-    res.send('stopped')
-  } else {
-    res.send('already stopped')
   }
+  res.send(getStatus())
 })
 
 app.post('/toggle', (req, res) => {
@@ -38,33 +48,39 @@ app.post('/toggle', (req, res) => {
     stopRadioProcess()
     res.send('stopped')
   } else {
-    startRadioProcess()
-    res.send('started')
+    startRadioProcess().then(() => {
+      res.send(getStatus())
+    })
   }
 })
 
 app.get('/state', (req, res) => {
-  if (radioProcess) {
-    res.send('playing')
-  } else {
-    res.send('stopped')
-  }
+  res.send(getStatus())
 })
 
 app.post('/volume/up', (req, res) => {
   volume.increase()
-  const msg = `increased volume`
-  console.log(msg)
-  res.send(msg)
+  res.send(getStatus())
 })
 
 app.post('/volume/down', (req, res) => {
   volume.decrease()
-  const msg = `decreased volume`
-  console.log(msg)
-  res.send(msg)
+  res.send(getStatus())
 })
 
-app.listen(port, () => {
-  console.log(`Tiny Radio can be controlled through http://localhost:${port}`)
+app.post('/volume/:volume', (req, res) => {
+  const v = Number(req.params.volume)
+  if (v && !Number.isNaN(v)) {
+    volume.set(Math.max(0, Math.min(100, v)))
+  }
+  res.send(getStatus())
+})
+
+app.listen(args.port, () => {
+  console.log(
+    `Tiny Radio started and can be controlled through http://localhost:${args.port}. Read the README for instructions.`
+  )
+  if (args.playOnStart) {
+    startRadioProcess()
+  }
 })

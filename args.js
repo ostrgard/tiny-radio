@@ -7,4 +7,9 @@ const getArg = (arg) => {
 module.exports = {
   url: getArg('url'),
   audioSink: getArg('audioSink'),
+  debug: getArg('playOnStart') || false,
+  playOnStart: getArg('playOnStart') || false,
+  port: getArg('port') || 3000,
+  initialVolume: getArg('initialVolume') || 50,
+  volumeIncrements: getArg('volumeIncrements') || 5,
 }

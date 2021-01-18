@@ -1,7 +1,7 @@
 const childProcess = require('child_process')
 const args = require('./args')
 
-let currentVolume = 50
+let currentVolume = args.initialVolume
 
 const setVolume = (volume = currentVolume) => {
   currentVolume = Math.min(100, Math.max(0, volume))
@@ -15,11 +15,15 @@ const setVolume = (volume = currentVolume) => {
   )
 }
 
+const getVolume = () => currentVolume
+
 // Running this at a 5 seconds interval, which ensures that we connect to the
 // audio-sink if it becomes available.
 setInterval(setVolume, 1000 * 5)
 
 module.exports = {
-  increase: () => setVolume(currentVolume + 5),
-  decrease: () => setVolume(currentVolume - 5),
+  set: (volume) => setVolume(volume),
+  increase: () => setVolume(currentVolume + args.volumeIncrements),
+  decrease: () => setVolume(currentVolume - args.volumeIncrements),
+  getVolume,
 }
